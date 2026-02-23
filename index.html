@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localizador de Produtos - Estoque</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0056b3; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        .resultado { margin-top: 20px; border-top: 2px solid #eee; }
+        .item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .item:last-child { border: none; }
+        .codigo { font-weight: bold; color: #d9534f; }
+        .nome { color: #555; text-align: right; }
+        .no-result { text-align: center; color: #999; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🔎 Localizador de Produtos</h2>
+    <input type="text" id="busca" placeholder="Digite os últimos 3 números ou o nome..." onkeyup="filtrar()">
+    
+    <div id="listaProdutos" class="resultado">
+        </div>
+</div>
+
+<script>
+    // Dados extraídos das suas imagens
+    const produtos = [
+        { c: "8606102", n: "CAP MS GREY" },
+        { c: "8606103", n: "CAP BD YELLOW" },
+        { c: "8606104", n: "CAP BMS PEACH YELLOW" },
+        { c: "700006161", n: "CAP WARM GREY" },
+        { c: "8606105", n: "TOP BODY PHYSIOJECT" },
+        { c: "8606106", n: "RING PHYSIOJECT" },
+        { c: "8606107", n: "CAM 8MM REV2" },
+        { c: "8606108", n: "BUTTON MS GREEN NO LOGO" },
+        { c: "8606109", n: "BUTTON MS LIME GREEN NO LOGO" },
+        { c: "32673SWI", n: "FLUID SILICONE 12500 CST" },
+        { c: "88721SWI", n: "BODY PREVENTIS" },
+        { c: "84819SWI", n: "BOX SHIPPER PREVENTIS" },
+        { c: "8606110", n: "BUTTON MS YELLOW NO LOGO" },
+        { c: "8606111", n: "BUTTON BLUE 3015 NO LOGO" },
+        { c: "8606112", n: "BUTTON MS GREY NO LOGO" },
+        { c: "8606113", n: "BUTTON BD YELLOW NO LOGO" },
+        { c: "700040351", n: "BUTTON PURPLE 7678 NO LOGO" },
+        { c: "8606114", n: "PLUNGER ROD CLEAR" },
+        { c: "8606115", n: "PLUNGER ROD BLUE" },
+        { c: "8359727", n: "TOP SUB ASSEMBLY TRAY" },
+        { c: "8359728", n: "LOW SUB ASSEMBLY TRAY" },
+        { c: "88722SWI", n: "NEEDLE COVER 1/2IN PREVENTIS" },
+        { c: "8515385", n: "WIRE" },
+        { c: "700040070", n: "CAM 6MM PHYSIOJECT" },
+        { c: "8547977", n: "NEEDLE COVER PHYSIOJECT" },
+        { c: "700011870", n: "BOTTOM BODY IMPROVED" },
+        { c: "700004990", n: "BUTTON ORANGE 130 NO LOGO" },
+        { c: "700006160", n: "BUTTON WARM GREY 6 NO LOGO" },
+        { c: "700037347", n: "NEEDLE COVER W/O R PHYSIOJECT" },
+        { c: "700037348", n: "NEEDLE COVER FROSTED W/O R PHYSIOJECT" },
+        { c: "32665SWI", n: "BOX SHIPPER PHYSIOJECT" },
+        { c: "8362514", n: "INSERT SHIPPER" },
+        { c: "88723SWI", n: "RING PREVENTIS" },
+        { c: "8515382", n: "WIRE" },
+        { c: "8547028", n: "5ML NEST" },
+        { c: "13456", n: "10ML NEST" },
+        { c: "13422", n: "20ML NEST" },
+        { c: "13608", n: "50ML NEST" },
+        { c: "500012610", n: "TYVEK COVER TUB SCF" },
+        { c: "8364869", n: "STERIFILL LLA" },
+        { c: "8547269", n: "SILICONE MIX RS87" },
+        { c: "20140SWI", n: "NEEDLE S/C C TIP" },
+        { c: "8362627", n: "DIPRIVAN FOIL" },
+        { c: "8005536", n: "MES LABELS" },
+        { c: "13547", n: "5ML TUB" },
+        { c: "13548", n: "10ML TUB" },
+        { c: "8002085", n: "50ML TUB" },
+        { c: "500012990", n: "TYVEK NEST COVER" },
+        { c: "500012980", n: "HEADERBAG MPTP STRIP" },
+        { c: "500012981", n: "JAPANESE TYVEK" },
+        { c: "8302713", n: "PAD CORRUGATED INSERT" },
+        { c: "500034775", n: "CASE CORR 5ML" },
+        { c: "500034774", n: "CASE CORR 10ML / 20ML" },
+        { c: "500034773", n: "CASE CORR 50ML" },
+        { c: "8547510", n: "SEPTUM SCF50ML S-LOK RiC" },
+        { c: "29196SWI", n: "DIPRIVAN SHIPPER" },
+        { c: "8016830", n: "PRTC SHIPPER" },
+        { c: "8606314", n: "DIPPY SLIP SHEET" },
+        { c: "500006730", n: "VYSTRA SHIPPER" },
+        { c: "500012982", n: "R.O.W TYVEK" }
+    ];
+
+    function filtrar() {
+        const termo = document.getElementById('busca').value.toLowerCase();
+        const lista = document.getElementById('listaProdutos');
+        lista.innerHTML = '';
+
+        if (termo.length < 2) return; // Só começa a buscar com 2 ou mais caracteres
+
+        const filtrados = produtos.filter(p => 
+            p.c.toLowerCase().endsWith(termo) || 
+            p.c.toLowerCase().includes(termo) || 
+            p.n.toLowerCase().includes(termo)
+        );
+
+        if (filtrados.length === 0) {
+            lista.innerHTML = '<div class="no-result">Nenhum produto encontrado.</div>';
+            return;
+        }
+
+        filtrados.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `<span class="codigo">${p.c}</span> <span class="nome">${p.n}</span>`;
+            lista.appendChild(div);
+        });
+    }
+</script>
+
+</body>
+</html>
